@@ -435,6 +435,13 @@
       chsd_d(isdch)%p_tot = ob(icmd)%hd(1)%sedp + ob(icmd)%hd(1)%solp
       chsd_d(ich)%dep_bf = sd_ch_vel(ich)%dep_bf
       chsd_d(ich)%velav_bf = sd_ch_vel(ich)%vel_bf
+      !! Diagnostic only: export the depth already interpolated for routed outflow.
+      !! Do not call rcurv_interp_flo here because it updates shared rating-curve state.
+      if (ob(icmd)%hd(1)%flo > 1.e-6) then
+        chsd_d(ich)%wat_dep = ch_rcurv(ich)%out2%dep
+      else
+        chsd_d(ich)%wat_dep = 0.
+      end if
       ch_out_d(ich) = ob(icmd)%hd(1)                       !set outflow om hydrograph
       ch_out_d(ich)%flo = ob(icmd)%hd(1)%flo / 86400.      !m3 -> m3/s
    

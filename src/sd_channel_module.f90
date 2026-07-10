@@ -277,6 +277,7 @@
         real :: p_tot = 0.              !(kg N)        |total phosphorus leaving the reach
         real :: dep_bf = 0.             !m             |depth of water when reach is at bankfull depth
         real :: velav_bf = 0.           !m/s           |average velocity when reach is at bankfull depth
+        real :: wat_dep = 0.            !m             |flow depth from the last active routed-outflow rating curve
       end type sd_ch_output
       
       type (sd_ch_output), dimension(:), allocatable, save :: chsd_d
@@ -327,6 +328,7 @@
           character(len=16) :: p_tot      =  "    p_tot      "        ! (kg_N)
           character(len=16) :: dep_bf     =  "  dep_bf       "        ! (m/s)
           character(len=16) :: velav_bf   =  "velav_bf       "        ! (m/s)
+          character(len=16) :: wat_dep    =  "wat_dep         "        ! (m)
       end type sdch_header
       type (sdch_header) :: sdch_hdr
       
@@ -364,6 +366,7 @@
           character(len=16) :: p_tot      =  "     kg_P      "        ! (kg_P)
           character(len=16) :: dep_bf     =  "     m/s       "        ! (m/s)
           character(len=16) :: velav_bf   =  "     m/s       "        ! (m/s)
+          character(len=16) :: wat_dep    =  "       m        "        ! (m)
       end type sdch_header_units
       type (sdch_header_units) :: sdch_hdr_units  
       
@@ -638,6 +641,7 @@
        cho3%p_tot = cho1%p_tot + cho2%p_tot
        cho3%dep_bf = cho1%dep_bf + cho2%dep_bf
        cho3%velav_bf = cho1%velav_bf + cho2%velav_bf
+       cho3%wat_dep = cho1%wat_dep + cho2%wat_dep
       end function chsd_add
        
       function chsd_div (ch1,const) result (ch2)
@@ -670,6 +674,7 @@
         ch2%n_tot = ch1%n_tot / const
         ch2%dep_bf = ch1%dep_bf / const
         ch2%velav_bf = ch1%velav_bf / const
+        ch2%wat_dep = ch1%wat_dep / const
       end function chsd_div
       
       function chsd_ave (ch1,const) result (ch2)
@@ -702,6 +707,7 @@
         ch2%n_tot = ch1%n_tot
         ch2%dep_bf = ch1%dep_bf
         ch2%velav_bf = ch1%velav_bf
+        ch2%wat_dep = ch1%wat_dep
       end function chsd_ave
            
       function chsd_mult (const, chn1) result (chn2)
@@ -734,6 +740,7 @@
         chn2%n_tot = const * chn1%n_tot
         chn2%dep_bf = const * chn1%dep_bf
         chn2%velav_bf = const * chn1%velav_bf
+        chn2%wat_dep = const * chn1%wat_dep
       end function chsd_mult
                   
       !! this function multiplies the rating curve by a ratio
