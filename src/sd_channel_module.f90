@@ -277,7 +277,7 @@
         real :: p_tot = 0.              !(kg N)        |total phosphorus leaving the reach
         real :: dep_bf = 0.             !m             |depth of water when reach is at bankfull depth
         real :: velav_bf = 0.           !m/s           |average velocity when reach is at bankfull depth
-        real :: wat_dep = 0.            !m             |flow depth from the last active routed-outflow rating curve
+        real :: wat_dep = 0.            !m             |time-weighted mean daily routed-outflow depth
       end type sd_ch_output
       
       type (sd_ch_output), dimension(:), allocatable, save :: chsd_d

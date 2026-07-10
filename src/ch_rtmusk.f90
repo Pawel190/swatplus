@@ -56,6 +56,7 @@
       real :: sum_inflo = 0.
       real :: sum_outflo = 0.
       real :: wet_evol = 0. 
+      real :: wat_dep_time_sum = 0. !m s           |time integral of routed-outflow depth for daily mean
 
       jrch = isdch
       jhyd = sd_dat(jrch)%hyd
@@ -73,6 +74,7 @@
       ch_wat_d(jrch)%seep = 0.
       
       sum_inflo = sum (ob(icmd)%tsin)
+      wat_dep_time_sum = 0.
         
       !! total wetland volume at start of day
       wet_stor(jrch) = hz
@@ -159,6 +161,9 @@
           outflo_rate = outflo / dts      !convert to cms
           call rcurv_interp_flo (jrch, outflo_rate)
           ch_rcurv(jrch)%out2 = rcurv
+          !! Diagnostic only: accumulate depth over the routing interval.
+          !! Dry substeps contribute zero because this block is skipped.
+          wat_dep_time_sum = wat_dep_time_sum + ch_rcurv(jrch)%out2%dep * dts
  
           !! add outflow to daily hydrograph and subdaily flow
           rto = outflo / tot_stor(jrch)%flo
@@ -188,6 +193,9 @@
         end if  ! tot_stor(jrch)%flo < 1.e-6
 
       end do    ! end of sub-daily loop
+
+      !! Time-weighted mean daily flow depth; this value does not feed back into routing.
+      chsd_d(jrch)%wat_dep = wat_dep_time_sum / (real(sd_ch(jrch)%msk%nsteps) * dts)
       
       !! compute water balance - evap and seep
       !! calculate transmission losses (seepage)
