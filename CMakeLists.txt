@@ -172,7 +172,6 @@ install(TARGETS ${SWATPLUS_EXE} DESTINATION RUNTIME DESTINATION ${PROJECT_SOURCE
 find_package(Python3 QUIET)
 
 set(spcheck "${PROJECT_SOURCE_DIR}/test/spcheck.py")
-set(test_dir "${PROJECT_BINARY_DIR}/data")
 if(WIN32)
   set(exe_path "${PROJECT_BINARY_DIR}/${SWATPLUS_EXE}.exe")
 else()
