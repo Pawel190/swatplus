@@ -172,15 +172,21 @@ install(TARGETS ${SWATPLUS_EXE} DESTINATION RUNTIME DESTINATION ${PROJECT_SOURCE
 find_package(Python3 QUIET)
 
 set(spcheck "${PROJECT_SOURCE_DIR}/test/spcheck.py")
-set(exe_path "${PROJECT_BINARY_DIR}/${SWATPLUS_EXE}")
 set(test_dir "${PROJECT_BINARY_DIR}/data")
-set(ref_dir  "${PROJECT_SOURCE_DIR}/data")
+if(WIN32)
+  set(exe_path "${PROJECT_BINARY_DIR}/${SWATPLUS_EXE}.exe")
+else()
+  set(exe_path "${PROJECT_BINARY_DIR}/${SWATPLUS_EXE}")
+endif()
+set(test_dir "${PROJECT_BINARY_DIR}/refdata")
+set(ref_dir  "${PROJECT_SOURCE_DIR}/refdata")
 
 # error tolerances
 set(rerr "0.01")
 set(aerr "1e-8")
 
 add_test(Ames_sub1   ${Python3_EXECUTABLE} ${spcheck} ctest ${exe_path} ${ref_dir}/Ames_sub1 ${test_dir} --abserr ${aerr} --relerr ${rerr})
+# add_test(Osu_1hru   ${Python3_EXECUTABLE} ${spcheck} ctest ${exe_path} ${ref_dir}/Osu_1hru ${test_dir} --abserr ${aerr} --relerr ${rerr})
 # add_test(Ithaca_sub6 python3 ${check_py} ${exe_path} ${ref_dir}/Ithaca_sub6 ${test_dir} ${aerr} ${rerr})
 
 
