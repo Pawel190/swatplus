@@ -74,5 +74,3 @@ It is therefore suitable as a calibration diagnostic where rating-curve assumpti
 ## Non-interference check
 
 Run the same input dataset with baseline and diagnostic builds and compare the pre-existing `flo_in`, `flo_out`, and `flo_stor` fields. They should remain unchanged. This checks that reporting does not interfere with routing; it does not revalidate either algorithm.
-
-Record the SWAT+ release and Git commit in publications. The public output reference is <https://swatplus.com/t3m4Docs/output-reference/channel-sediment-nutrient/>.
