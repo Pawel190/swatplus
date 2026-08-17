@@ -59,3 +59,13 @@ CMakeCache.txt
 Resources/R*
 src/main.f90
 ford.md
+
+# Local agent and IDE configuration
+.agents/
+agents/
+.vs/
+.vscode/
+
+# Build output directories
+cmake-build-*/
+out/
