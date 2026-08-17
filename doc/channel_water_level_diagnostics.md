@@ -63,7 +63,7 @@ For observations expressed as water depth above a local gauge zero, both series 
 H_model = Z_model_bed_at_gauge + wat_dep
 ```
 
-The modeled channel must correspond spatially to the gauge. Daily `wat_dep` is a time-weighted daily mean and should be compared with an observed daily mean calculated over the same civil-day interval and time zone.
+The modeled channel must correspond spatially to the gauge. Daily `wat_dep` is a time-weighted daily mean and should be compared with an observed daily mean calculated over the same calendar day.
 
 ## Physical limitations
 
