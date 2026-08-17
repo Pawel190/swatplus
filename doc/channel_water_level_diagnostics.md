@@ -67,9 +67,7 @@ The modeled channel must correspond spatially to the gauge. Daily `wat_dep` is a
 
 ## Physical limitations
 
-`wat_dep` is derived from the SWAT+ channel rating curve and routed discharge. It is consistent with the geometry and hydraulic relation used by this implementation, but is not a solution of the full Saint-Venant equations. It does not explicitly represent backwater, downstream control, local structures, or a surveyed gauge datum.
-
-It is therefore suitable as a calibration diagnostic where rating-curve assumptions are appropriate. Calibration against absolute gauge elevation additionally requires a defensible channel-bed elevation and common datum.
+`wat_dep` is derived from the SWAT+ channel rating curve and routed discharge. It is consistent with the geometry and hydraulic relation used by this implementation, but is not a solution of the full Saint-Venant equations. It does not explicitly represent backwater, downstream control, local structures.
 
 ## Non-interference check
 
