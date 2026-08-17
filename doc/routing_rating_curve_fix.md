@@ -248,30 +248,3 @@ its outflow equation, although they are still initialized consistently.
 
 Channels without active storage and configurations with zero routing steps
 receive zero initial Muskingum memory.
-
-## 7. Static verification performed
-
-Only non-executing checks were performed:
-
-- the change set was reviewed with `git diff`,
-- `git diff --check` completed successfully,
-- changed source lines were checked against the 132-character free-form
-  Fortran line-length limit.
-
-No compiler, CMake configuration, executable, model simulation, or regression
-dataset was run.
-
-## 8. Remaining verification
-
-The following work remains intentionally unperformed:
-
-1. Configure and build the project with a supported Fortran compiler.
-2. Verify that all four rating-curve points are finite and monotonically
-   increasing in depth, area, volume, and discharge for representative data.
-3. Verify `volume_total = volume_channel + volume_floodplain` and
-   `volume_total = area_total * length * 1000` numerically.
-4. Exercise both Variable Storage and Muskingum routing.
-5. Run a representative SWAT+ dataset and compare water balance, outflow,
-   depth, and flood-plain storage against a documented baseline.
-6. Review the expected numerical changes before accepting or updating any
-   regression reference outputs.
