@@ -25,34 +25,21 @@
       integer :: ipest                  !none      |counter
       integer :: ipath                  !none      |counter
       integer :: idat
-      integer :: i_dep                  !none      |counter
       integer :: icha
       integer :: isalt
       integer :: ics
       
-      real :: aa                      !none         |area/area=1 (used to calculate velocity with
-                                      !             |Manning"s equation)
-      real :: a                       !m^2          |cross-sectional area of channel
       real :: b                       !m            |bottom width of channel
-      real :: d                       !m            |depth of flow
-      real :: p                       !m            |wetting perimeter
       real :: chside                  !none         |change in horizontal distance per unit
                                       !             |change in vertical distance on channel side
                                       !             |slopes; always set to 2 (slope=1/2)
-      real :: fps                     !none         |change in horizontal distance per unit
-                                      !             |change in vertical distance on floodplain side
-                                      !             |slopes; always set to 4 (slope=1/4)
-      integer :: max                  !             |
-      real :: rh                      !m            |hydraulic radius
-      real :: qman                    !m^3/s or m/s |flow rate or flow velocity
       real :: bedvol                  !m^3          |volume of river bed sediment
       
-      real :: dep                     !             |
-      real :: vel                     !             |
       real :: flow_dep
-      real :: celerity
       real :: msk1         !units             |description 
       real :: msk2         !units             |description 
+      real :: msk_sum      !none              |sum of Muskingum calibration weights
+      real :: msk_x        !none              |bounded Muskingum weighting factor
       real :: detmax       !units             |description 
       real :: xkm          !hr                |storage time constant for the reach
       real :: det          !hr                |time step
@@ -121,59 +108,52 @@
           sd_ch(i)%hc_co = 0.
         end if
 
-        !! compute travel time coefficients - delete when finished with flood plain
-        aa = 1.
         b = 0.
-        d = 0.
         chside = sd_ch(i)%chss
-        fps = 4.
         b = sd_ch(i)%chw - 2. * sd_ch(i)%chd * chside
 
         !! check IF bottom width (b) is < 0
         if (b <= 0.) then
             b = .5 * sd_ch(i)%chw
             b = Max(0., b)
-            chside = (sd_ch(i)%chw - b) / (2. * sd_ch(i)%chd)
+            if (sd_ch(i)%chd > 1.e-9) then
+              chside = (sd_ch(i)%chw - b) / (2. * sd_ch(i)%chd)
+            else
+              chside = 0.
+            end if
+            sd_ch(i)%chss = chside
         end if
         sd_ch_vel(i)%wid_btm = b
         sd_ch_vel(i)%dep_bf = sd_ch(i)%chd  !delete sd_ch_vel when finished
-        !! compute travel time coefficients - delete when finished with flood plain
 
         !! compute rating curve
         call sd_rating_curve (i)
+        sd_ch_vel(i)%wid_btm = ch_rcurv(i)%wid_btm
         
         !! set Muskingum parameters
-        !! compute storage discharge for Muskingum at 0.1 and 1.0 times bankfull depth
-      do i_dep = 1, 2
-        if (i_dep == 1) dep = 0.1 * sd_ch(i)%chd
-        if (i_dep == 2) dep = sd_ch(i)%chd
-        !! c^2=a^2+b^2 - a=dep; a/b=slope; b^2=a^2/slope^2
-        p = b + 2. * Sqrt(dep ** 2 * (1. + 1. / (sd_ch(i)%chss ** 2)))
-        a = b * dep + dep / sd_ch(i)%chss
-        rh = a / p
-        vel = Qman(1., rh, sd_ch(i)%chn, sd_ch(i)%chs)
-        celerity = vel * 5. / 3.
-        if (i_dep == 1) then
-          !! 0.1*bankfull storage discharge coef
-          sd_ch(i)%stor_dis_01bf = sd_ch(i)%chl / (3.6 * celerity)
-        else
-          !! bankfull storage discharge coef
-          sd_ch(i)%stor_dis_bf = sd_ch(i)%chl / (3.6 * celerity)
-        end if
-      end do
+        !! wave celerity is 5/3 of velocity, so its storage time is 3/5 of travel time
+        sd_ch(i)%stor_dis_01bf = 0.6 * ch_rcurv(i)%elev(1)%ttime
+        sd_ch(i)%stor_dis_bf = 0.6 * ch_rcurv(i)%elev(2)%ttime
         
-      !! Compute storage time constant for reach (msk_co1 + msk_co2 = 1.)
-	  msk1 = bsn_prm%msk_co1 / (bsn_prm%msk_co1 + bsn_prm%msk_co2)
-	  msk2 = bsn_prm%msk_co2 / (bsn_prm%msk_co1 + bsn_prm%msk_co2)
+      !! Compute storage time constant for reach (msk1 + msk2 = 1.)
+      msk_sum = bsn_prm%msk_co1 + bsn_prm%msk_co2
+      if (msk_sum > 1.e-9) then
+        msk1 = bsn_prm%msk_co1 / msk_sum
+        msk2 = bsn_prm%msk_co2 / msk_sum
+      else
+        msk1 = 0.75
+        msk2 = 0.25
+      end if
       xkm = sd_ch(i)%stor_dis_bf * msk1 + sd_ch(i)%stor_dis_01bf * msk2
+      msk_x = Max(0., Min(0.5, bsn_prm%msk_x))
       
       !! Muskingum numerical stability -Jaehak Jeong, 2011
-      detmax = 2.* xkm * (1.- bsn_prm%msk_x)
+      detmax = 2. * xkm * (1. - msk_x)
       det = time%dtm / 60.      !hours
       sd_ch(i)%msk%substeps = 1
       
       !! Discretize time interval to meet the stability criterion 
-      if (det > detmax) then
+      if (detmax > 1.e-9 .and. det > detmax) then
         sd_ch(i)%msk%substeps = Int(det / detmax) + 1
       end if
       if (bsn_cc%rte == 0 .and. time%step <= 1) then
@@ -181,24 +161,36 @@
       end if
       sd_ch(i)%msk%nsteps = time%step * sd_ch(i)%msk%substeps
               
-        !! intial inflow-outflow
-        if (sd_ch(i)%msk%nsteps > 0) then
-          sd_ch(i)%in1_vol = rcurv%flo_rate / (86400. / sd_ch(i)%msk%nsteps)
-          sd_ch(i)%out1_vol = rcurv%flo_rate / (86400. / sd_ch(i)%msk%nsteps)
-        end if
-        
         !! compute coefficients
-        det = det / sd_ch(i)%msk%substeps
-        denom = 2. * xkm * (1. - bsn_prm%msk_x) + det
-        sd_ch(i)%msk%c1 = (det - 2. * xkm * bsn_prm%msk_x) / denom
-        sd_ch(i)%msk%c1 = Max(0., sd_ch(i)%msk%c1)
-        sd_ch(i)%msk%c2 = (det + 2. * xkm * bsn_prm%msk_x) / denom
-        sd_ch(i)%msk%c3 = (2. * xkm * (1. - bsn_prm%msk_x) - det) / denom
-        !! c1+c2+c3 must equal 1
-        sumc = sd_ch(i)%msk%c1 + sd_ch(i)%msk%c2 + sd_ch(i)%msk%c3
-        sd_ch(i)%msk%c1 = sd_ch(i)%msk%c1 / sumc
-        sd_ch(i)%msk%c2 = sd_ch(i)%msk%c2 / sumc
-        sd_ch(i)%msk%c3 = sd_ch(i)%msk%c3 / sumc
+        if (xkm > 1.e-9 .and. sd_ch(i)%msk%substeps > 0) then
+          det = det / sd_ch(i)%msk%substeps
+          denom = 2. * xkm * (1. - msk_x) + det
+          if (denom > 1.e-9) then
+            sd_ch(i)%msk%c1 = (det - 2. * xkm * msk_x) / denom
+            sd_ch(i)%msk%c1 = Max(0., sd_ch(i)%msk%c1)
+            sd_ch(i)%msk%c2 = (det + 2. * xkm * msk_x) / denom
+            sd_ch(i)%msk%c3 = (2. * xkm * (1. - msk_x) - det) / denom
+            !! c1+c2+c3 must equal 1
+            sumc = sd_ch(i)%msk%c1 + sd_ch(i)%msk%c2 + sd_ch(i)%msk%c3
+            if (sumc > 1.e-9) then
+              sd_ch(i)%msk%c1 = sd_ch(i)%msk%c1 / sumc
+              sd_ch(i)%msk%c2 = sd_ch(i)%msk%c2 / sumc
+              sd_ch(i)%msk%c3 = sd_ch(i)%msk%c3 / sumc
+            else
+              sd_ch(i)%msk%c1 = 1.
+              sd_ch(i)%msk%c2 = 0.
+              sd_ch(i)%msk%c3 = 0.
+            end if
+          else
+            sd_ch(i)%msk%c1 = 1.
+            sd_ch(i)%msk%c2 = 0.
+            sd_ch(i)%msk%c3 = 0.
+          end if
+        else
+          sd_ch(i)%msk%c1 = 1.
+          sd_ch(i)%msk%c2 = 0.
+          sd_ch(i)%msk%c3 = 0.
+        end if
 
       end do    !end of channel loop
  
@@ -218,6 +210,15 @@
           call rcurv_interp_dep (icha, flow_dep)
           ch_rcurv(ich)%in1 = rcurv
           ch_rcurv(ich)%out1 = rcurv
+
+          !! initialize Muskingum memory with the volume in one routing step
+          if (sd_ch(ich)%msk%nsteps > 0) then
+            sd_ch(ich)%in1_vol = rcurv%flo_rate * (86400. / sd_ch(ich)%msk%nsteps)
+            sd_ch(ich)%out1_vol = sd_ch(ich)%in1_vol
+          else
+            sd_ch(ich)%in1_vol = 0.
+            sd_ch(ich)%out1_vol = 0.
+          end if
           
           !! initial volume is frac of flow depth - frac*m*m*km*1000. = m3
           !tot_stor(ich)%flo = om_init_water(iom_ini)%flo * sd_ch(ich)%chd * sd_ch(ich)%chw * sd_ch(ich)%chl * 1000.
@@ -241,6 +242,8 @@
         else
           ch_stor(ich) = hz
           fp_stor(ich) = hz
+          sd_ch(ich)%in1_vol = 0.
+          sd_ch(ich)%out1_vol = 0.
         end if
         !! save initial water if calibrating and rerunning
         ch_om_water_init(ich) = ch_stor(ich)
