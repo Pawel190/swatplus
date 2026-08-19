@@ -265,7 +265,7 @@
         real :: p_tot = 0.              !(kg N)        |total phosphorus leaving the reach
         real :: dep_bf = 0.             !m             |depth of water when reach is at bankfull depth
         real :: velav_bf = 0.           !m/s           |average velocity when reach is at bankfull depth
-        real :: wat_dep = 0.            !m             |time-weighted mean daily routed-outflow depth
+        real :: wat_dep = 0.            !m             |diagnostic flow depth above the model channel bed
       end type sd_ch_output
       
       type (sd_ch_output), dimension(:), allocatable, save :: chsd_d
@@ -721,6 +721,47 @@
         rc2%wet_perim = rc1%wet_perim * const
         rc2%ttime = rc1%ttime * const
       end function chrc_mult
+
+      !! Return flow depth from the channel rating curve without changing
+      !! the shared rcurv workspace used by the routing calculations.
+      function rcurv_depth_from_flo (icha, flo_rate) result (flo_dep)
+        integer, intent (in) :: icha
+        real, intent (in) :: flo_rate
+        real :: flo_dep
+        real :: rto
+        real :: flo_range
+        integer :: ielev
+
+        flo_dep = 0.
+        if (flo_rate <= 0. .or. ch_rcurv(icha)%npts <= 0) return
+
+        do ielev = 1, ch_rcurv(icha)%npts
+          if (flo_rate < ch_rcurv(icha)%elev(ielev)%flo_rate) then
+            if (ielev == 1) then
+              if (ch_rcurv(icha)%elev(ielev)%flo_rate > 0.) then
+                rto = flo_rate / ch_rcurv(icha)%elev(ielev)%flo_rate
+                flo_dep = ch_rcurv(icha)%elev(ielev)%dep * rto
+              end if
+            else
+              flo_range = ch_rcurv(icha)%elev(ielev)%flo_rate - &
+                ch_rcurv(icha)%elev(ielev-1)%flo_rate
+              if (flo_range > 0.) then
+                rto = (flo_rate - ch_rcurv(icha)%elev(ielev-1)%flo_rate) / flo_range
+                flo_dep = ch_rcurv(icha)%elev(ielev-1)%dep + rto * &
+                  (ch_rcurv(icha)%elev(ielev)%dep - ch_rcurv(icha)%elev(ielev-1)%dep)
+              end if
+            end if
+            return
+          end if
+        end do
+
+        ielev = ch_rcurv(icha)%npts
+        if (ch_rcurv(icha)%elev(ielev)%flo_rate > 0.) then
+          rto = 1. + (flo_rate - ch_rcurv(icha)%elev(ielev)%flo_rate) / &
+            ch_rcurv(icha)%elev(ielev)%flo_rate
+          flo_dep = ch_rcurv(icha)%elev(ielev)%dep * rto
+        end if
+      end function rcurv_depth_from_flo
       
       subroutine chrc_interp (rc1, rc2, const, rci)
         type (channel_rating_curve_parameters), intent (in) :: rc1

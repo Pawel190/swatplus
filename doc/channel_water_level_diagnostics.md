@@ -10,7 +10,17 @@
 
 | Field | Unit | Definition |
 |---|---:|---|
-| `wat_dep` | m | Time-weighted mean daily flow depth above the model channel bed, calculated from `out2%dep` for every routing substep. Dry substeps contribute zero. |
+| `wat_dep` | m | Flow depth above the model channel bed, derived from the SWAT+ channel rating curve. Its daily definition depends on `i_fpwet`, as described below. |
+
+For `i_fpwet=0`, `wat_dep` is the time-weighted mean daily depth calculated from `out2%dep` for every routing substep. Dry substeps contribute zero.
+
+For `i_fpwet=1`, the routing path does not provide an equivalent series of routed-outflow substeps. `wat_dep` is therefore the rating-curve depth corresponding to the final mean daily outflow rate, after routing and flow-control calculations are complete:
+
+```text
+wat_dep = rating_curve_depth(final_outflow_volume / 86400)
+```
+
+Because the rating curve is nonlinear, the depth of mean daily flow is not generally identical to a mean of instantaneous depths. The `i_fpwet=1` value must therefore be interpreted as a daily flow-equivalent depth, not as a reconstructed subdaily mean.
 
 Monthly, yearly, and average-annual values follow the existing `sd_ch_output` aggregation and are arithmetic means of the contributing daily values.
 
@@ -19,14 +29,15 @@ Monthly, yearly, and average-annual values follow the existing `sd_ch_output` ag
 ## Source-code traceability
 
 1. `src/basin_module.f90`: `rte=0` selects Variable Storage; `rte=1` selects Muskingum.
-2. `src/sd_channel_control3.f90`: prepares `flo_in`, calls `ch_rtmusk`, and exports `flo_out` and `wat_dep`.
-3. `src/ch_rtmusk.f90`: implements both routing alternatives. After routed outflow is calculated, `rcurv_interp_flo` produces `ch_rcurv(jrch)%out2`, including `dep`.
-4. `src/rcurv_interp_flo.f90`: interpolates rating-curve properties for the routed outflow rate.
-5. `src/sd_channel_module.f90`: defines `channel_rating_curve_parameters%dep` and output field `sd_ch_output%wat_dep`.
-6. `src/sd_chanmorph_output.f90`: writes the morphology record.
-7. `src/header_sd_channel.f90`: opens `channel_sdmorph_*` files and writes their headers and units.
+2. For `i_fpwet=0`, `src/sd_channel_control3.f90` prepares `flo_in`, calls `ch_rtmusk`, and exports `flo_out` and `wat_dep`.
+3. `src/ch_rtmusk.f90` implements both routing alternatives used on that path. After routed outflow is calculated, `rcurv_interp_flo` produces `ch_rcurv(jrch)%out2`, including `dep`.
+4. For `i_fpwet=1`, `src/sd_channel_control.f90` completes routing and flow controls, then converts only the final mean daily outflow rate to `wat_dep` for output.
+5. `src/rcurv_interp_flo.f90` interpolates all rating-curve properties for routing calculations.
+6. `src/sd_channel_module.f90` defines `channel_rating_curve_parameters%dep`, output field `sd_ch_output%wat_dep`, and the state-free `rcurv_depth_from_flo` diagnostic function.
+7. `src/sd_chanmorph_output.f90` writes the morphology record.
+8. `src/header_sd_channel.f90` opens `channel_sdmorph_*` files and writes their headers and units.
 
-No additional call to `rcurv_interp_flo` is made. The already calculated `ch_rcurv(jrch)%out2%dep` is accumulated after each active routing substep, preventing changes to shared rating-curve state.
+For `i_fpwet=0`, no additional call to `rcurv_interp_flo` is made. The already calculated `ch_rcurv(jrch)%out2%dep` is accumulated after each active routing substep. For `i_fpwet=1`, `rcurv_depth_from_flo` reads the established rating curve and returns only its interpolated depth; it does not write `rcurv` or any routing variable.
 
 ## Routing equations relevant to the diagnostic
 
@@ -55,6 +66,16 @@ wat_dep_day = sum(out2%dep * dt) / sum(dt)
 
 Routing therefore determines outflow first; the rating curve maps that outflow to reported depth. `wat_dep` does not feed back into routing.
 
+For `i_fpwet=1`, the diagnostic sequence is:
+
+```text
+complete routing, losses, storage and flow controls
+final_outflow_rate = final_outflow_volume / 86400
+wat_dep = rating_curve_depth(final_outflow_rate)
+```
+
+The conversion occurs only when morphology output fields are populated and does not alter the final outflow.
+
 ## Comparison with a river gauge
 
 For observations expressed as water depth above a local gauge zero, both series require a common vertical reference. An absolute modeled level can be constructed outside routing as:
@@ -63,7 +84,9 @@ For observations expressed as water depth above a local gauge zero, both series 
 H_model = Z_model_bed_at_gauge + wat_dep
 ```
 
-The modeled channel must correspond spatially to the gauge. Daily `wat_dep` is a time-weighted daily mean and should be compared with an observed daily mean calculated over the same calendar day.
+The modeled channel must correspond spatially to the gauge. For `i_fpwet=0`, daily `wat_dep` is a time-weighted daily mean and should be compared with an observed daily mean calculated over the same calendar day. For `i_fpwet=1`, it is the depth associated with mean daily discharge, so comparisons during strongly varying or event flow must acknowledge that distinction.
+
+At many gauges, discharge is itself inferred from observed stage using a station-specific empirical rating curve. The reverse conversion performed here is methodologically valid, but it uses the SWAT+ model-channel rating curve rather than the gauge rating curve. Agreement in discharge therefore does not guarantee agreement in stage. Applying the station-specific rating curve to modeled discharge outside SWAT+ is an alternative when the objective is to reproduce the gauge-reported stage rather than diagnose the model-channel hydraulics.
 
 ## Physical limitations
 

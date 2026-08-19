@@ -770,6 +770,9 @@
       !! output channel morphology
       chsd_d(isdch)%flo = ob(icmd)%hd(1)%flo / 86400.        !adjust if overbank flooding is moved to landscape
       chsd_d(isdch)%flo_mm = ob(icmd)%hd(1)%flo / (10. * ob(icmd)%area_ha)   !flow out in mm
+      !! Diagnostic only: convert final mean daily outflow to depth without
+      !! modifying the shared rating-curve workspace or any routing state.
+      chsd_d(isdch)%wat_dep = rcurv_depth_from_flo (isdch, chsd_d(isdch)%flo)
       chsd_d(isdch)%peakr = peakrate 
       chsd_d(isdch)%sed_in = ob(icmd)%hin%sed
       chsd_d(isdch)%sed_out = sedout
