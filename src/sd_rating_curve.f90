@@ -54,7 +54,8 @@
         ch_rcurv(i)%elev(i_dep)%xsec_area = a
         
         ch_rcurv(i)%elev(i_dep)%top_wid = b + 2. * dep * sd_ch(i)%chss
-        ch_rcurv(i)%elev(i_dep)%surf_area = ch_rcurv(i)%elev(i_dep)%top_wid * sd_ch(i)%chl
+        !! m2 = m * km * 1000 m/km
+        ch_rcurv(i)%elev(i_dep)%surf_area = ch_rcurv(i)%elev(i_dep)%top_wid * sd_ch(i)%chl * 1000.
         ch_rcurv(i)%elev(i_dep)%vol = a * sd_ch(i)%chl * 1000.
         ch_rcurv(i)%elev(i_dep)%vol_ch = ch_rcurv(i)%elev(i_dep)%vol
         ch_rcurv(i)%elev(i_dep)%vol_fp = 0.
@@ -97,7 +98,8 @@
         ch_rcurv(i)%elev(ifp_dep)%wet_perim = p
         ch_rcurv(i)%elev(ifp_dep)%xsec_area = a
         ch_rcurv(i)%elev(ifp_dep)%top_wid = sd_ch(i)%chw + 2. * dep / sd_ch(i)%fps
-        ch_rcurv(i)%elev(ifp_dep)%surf_area = ch_rcurv(i)%elev(ifp_dep)%top_wid * sd_ch(i)%chl
+        !! m2 = m * km * 1000 m/km
+        ch_rcurv(i)%elev(ifp_dep)%surf_area = ch_rcurv(i)%elev(ifp_dep)%top_wid * sd_ch(i)%chl * 1000.
         !! routing stores the channel up to bankfull; all excess water is flood-plain storage
         ch_rcurv(i)%elev(ifp_dep)%vol_ch = vol_bf
         ch_rcurv(i)%elev(ifp_dep)%vol_fp = (a - a_bf) * sd_ch(i)%chl * 1000.

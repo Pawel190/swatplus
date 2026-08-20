@@ -41,12 +41,12 @@
       real :: tot_stor_init
       real :: inout             !m3             |inflow - outflow for day
       real :: del_stor          !m3             |change in storage of channel + flood plain + wetlands
-      real :: topw              !m                 |top width of main channel
+      real :: topw              !m^2               |water surface area used to calculate evaporation
       real :: qinday            !units             |description 
       real :: qoutday           !units             |description   
       real :: inflo             !m^3           |inflow water volume
       real :: inflo_rate        !m^3/s         |inflow rate
-      real :: dep_flo = 0.      !m             |depth of flow
+      real :: dep_flo           !m             |routed-outflow depth at the current substep
       real :: ttime             !hr            |travel time through the reach
       real :: outflo            !m^3           |outflow water volume
       real :: tl                !m^3           |transmission losses during time step
@@ -80,6 +80,7 @@
       flo_dep = 0.
       trans_loss = 0.
       evap = 0.
+      dep_flo = 0.
       
       !***jga
       !ob(icmd)%tsin = (/0., 800., 2000., 4200., 5200., 4400., 3200., 2500., 2000., 1500., 1000., 700., 400.,     &
@@ -143,6 +144,7 @@
           ch_rcurv(jrch)%out1 = rcz
           sd_ch(jrch)%in1_vol = 0.
           sd_ch(jrch)%out1_vol = 0.
+          dep_flo = 0.
         else
           if (bsn_cc%rte == 1) then
           !! Muskingum flood routing method
@@ -166,6 +168,7 @@
           outflo_rate = outflo / dts      !convert to cms
           call rcurv_interp_flo (jrch, outflo_rate)
           ch_rcurv(jrch)%out2 = rcurv
+          dep_flo = ch_rcurv(jrch)%out2%dep
           !! Diagnostic only: accumulate depth over the routing interval.
           !! Dry substeps contribute zero because this block is skipped.
           wat_dep_time_sum = wat_dep_time_sum + ch_rcurv(jrch)%out2%dep * dts
