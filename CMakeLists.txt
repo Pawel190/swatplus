@@ -85,11 +85,10 @@ elseif(WIN32)
         set(FFC             "ifo")
         link_libraries("-static")
     elseif(CMAKE_Fortran_COMPILER_ID STREQUAL IntelLLVM)
-        set(fdialect        "/fpp /free /fpe0 /traceback /libs:static /MT")
+        set(fdialect        "/fpp /free /fpe0 /traceback /fp:precise")
         set(fdebug          "/warn:all /check:bounds")
         set(frelease        "/O2")
         set(FFC             "ifx")
-        add_link_options("/libs:static" "/MT")
     elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
         set(fdialect        "-cpp -fcheck=all -ffpe-trap=invalid,zero,overflow,underflow -fimplicit-none -ffree-line-length-none -fbacktrace -finit-local-zero -fno-unsafe-math-optimizations -frounding-math -fsignaling-nans")
         set(fdebug          "-Wall ")
@@ -162,6 +161,13 @@ endif()
 
 file(GLOB sources src/*.f90)
 add_executable(${SWATPLUS_EXE} ${sources})
+
+if(WIN32 AND CMAKE_Fortran_COMPILER_ID STREQUAL "IntelLLVM")
+    set_property(
+        TARGET ${SWATPLUS_EXE}
+        PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+endif()
 
 #############################################################################
 # Install
