@@ -53,6 +53,7 @@ nbproject/
 Makefile
 cluster.patch
 readme*
+!doc/README_soil_nutrient_water_quality_stability.md
 CMakeFiles/
 CMakeCache.txt
 .history/*
