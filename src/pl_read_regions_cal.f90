@@ -44,6 +44,8 @@
 
       do i = 1, mreg
 
+        !! nspu is optional; a two-field region record means all HRUs
+        nspu = 0
         read (107,*,iostat=eof) plcal(i)%name, plcal(i)%lum_num, nspu       
         if (eof < 0) exit
         if (nspu > 0) then

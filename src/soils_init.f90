@@ -199,6 +199,9 @@
         allocate (soil1_init(ihru)%microb(nly))
         allocate (soil1_init(ihru)%man(nly))
         allocate (soil1_init(ihru)%water(nly))
+
+        !! initialize carbon and nutrient contents for each hru
+        call soil_nutcarb_init(isol)
         
       end do
 

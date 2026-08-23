@@ -96,9 +96,11 @@
         grnd_covfact = max (0., grnd_covfact)
         
         !! ***jga
-        grnd_covfact = 1.34 + 0.225 * log(pldb(idp)%usle_c)
-        grnd_covfact = amin1 (1., grnd_covfact)
-        grnd_covfact = max (0., grnd_covfact)
+        if (pcom(j)%npl > 0) then
+          grnd_covfact = 1.34 + 0.225 * log(pldb(idp)%usle_c)
+          grnd_covfact = amin1 (1., grnd_covfact)
+          grnd_covfact = max (0., grnd_covfact)
+        end if
         c = Max(1.e-10, rsd_covfact * can_covfact * grnd_covfact)
         
         !! erosion output variables
