@@ -59,7 +59,6 @@
             allocate (dtbl_lum(i)%act_hit(dtbl_lum(i)%alts))
             allocate (dtbl_lum(i)%act_typ(dtbl_lum(i)%acts))
             allocate (dtbl_lum(i)%act_app(dtbl_lum(i)%acts))
-            dtbl_lum(i)%act_app = 0
             allocate (dtbl_lum(i)%act_outcomes(dtbl_lum(i)%acts,dtbl_lum(i)%alts))
             
             !read conditions and condition alternatives
