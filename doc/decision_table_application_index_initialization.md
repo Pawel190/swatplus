@@ -17,9 +17,6 @@ called from the land-use decision-table action handler in `src/actions.f90`.
 The same executable and inputs could also complete successfully because the
 failure depended on undefined memory contents.
 
-The failure is unrelated to GWFLOW. It was exposed while running a model that
-also enabled the groundwater-flow module.
-
 ## Root cause
 
 `dtbl_lum(i)%act_app` was allocated in `src/dtbl_lum_read.f90` without an
@@ -43,6 +40,3 @@ dtbl_lum(i)%act_app = 0
 
 Zero retains the existing meaning of "no application record". Successful
 crosswalks continue to replace zero with the valid one-based database index.
-
-No guard was added to `actions.f90`, and no transplant or GWFLOW calculation
-was changed.
