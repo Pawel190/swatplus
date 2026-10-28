@@ -100,6 +100,8 @@
       ch_stor_init = ch_stor(jrch)%flo
       fp_stor_init = fp_stor(jrch)%flo
       tot_stor_init = ch_stor_init + fp_stor_init
+      !! include storage changes from groundwater exchange before routing
+      tot_stor(jrch) = ch_stor(jrch) + fp_stor(jrch)
       
       irtstep = 1
       isubstep = 0

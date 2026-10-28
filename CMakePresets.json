@@ -65,6 +65,7 @@
       "binaryDir": "build/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_Fortran_FLAGS_DEBUG": "/debug:full /Od",
         "CMAKE_INSTALL_PREFIX": "build/debug",
         "CMAKE_Fortran_COMPILER": "ifx"
       }

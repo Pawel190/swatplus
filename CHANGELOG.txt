@@ -1,0 +1,4 @@
+2026-10-27
+
+- Fixed initialization of det, scoef, and frac in sd_channel_control3, eliminating the observed floating-point overflow.
+- Synchronized tot_stor with channel and floodplain storage before routing in ch_rtmusk to account for water exchange with the gwflow module (issue #360: https://github.com/swat-model/swatplus/issues/360).

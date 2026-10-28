@@ -67,6 +67,10 @@ agents/
 .vs/
 .vscode/
 
+#temporary files
+tmp/
+.tmp/
+
 # Build output directories
 cmake-build-*/
 out/

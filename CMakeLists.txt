@@ -163,6 +163,11 @@ file(GLOB sources src/*.f90)
 add_executable(${SWATPLUS_EXE} ${sources})
 
 if(WIN32 AND CMAKE_Fortran_COMPILER_ID STREQUAL "IntelLLVM")
+    set_target_properties(${SWATPLUS_EXE} PROPERTIES
+        PDB_NAME "${SWATPLUS_EXE}"
+        PDB_SUFFIX ".pdb"
+        PDB_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    )
     set_property(
         TARGET ${SWATPLUS_EXE}
         PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded"

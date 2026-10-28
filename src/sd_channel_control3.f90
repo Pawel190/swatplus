@@ -257,6 +257,13 @@
         hcs3 = hcs2 + ch_water(ich) !incoming + storage
       endif
       
+      rt_delt = 1.
+      det = 24. * rt_delt
+      scoef = bsn_prm%scoef * det / (rttime + det)
+      scoef = max (0., scoef)
+      scoef = amin1 (1., scoef)
+      frac = 1. - scoef
+
       !rtb hydrograph separation
       if (rttime > det) then      ! ht1 = incoming + storage
         !! travel time > timestep -- then all incoming is stored and frac of stored is routed
